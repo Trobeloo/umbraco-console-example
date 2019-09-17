@@ -1,4 +1,5 @@
-﻿using System.Management.Automation;
+﻿using System;
+using System.Management.Automation;
 
 namespace Our.Umbraco.Community.PowerShellModule
 {
@@ -11,7 +12,7 @@ namespace Our.Umbraco.Community.PowerShellModule
 
         protected override void ProcessRecord()
         {
-            WriteObject($"Hi there, {Greetee} #{++greets}!");
+            WriteObject($"Hi there, {Greetee} #{++greets}!\r\nWe're in {Environment.CurrentDirectory}'");
         }
     }
 }

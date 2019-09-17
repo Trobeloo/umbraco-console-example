@@ -31,6 +31,8 @@ namespace Our.Umbraco.Community.PowerShellModule
 
         public void Start()
         {
+            AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
+
             CreateAndRunDomain();
         }
 
@@ -42,13 +44,12 @@ namespace Our.Umbraco.Community.PowerShellModule
                 new AppDomainSetup
                 {
                     //ApplicationBase = Environment.CurrentDirectory,
-                    //PrivateBinPath = Path.Combine(Environment.CurrentDirectory, "bin"),
+                    PrivateBinPath = AppDomain.CurrentDomain.BaseDirectory,
                     //PrivateBinPathProbe = "NonNullToOnlyUsePrivateBin",
                     ConfigurationFile = Path.Combine(Environment.CurrentDirectory, "web.config")
                 }
             );
             umbracoDomain.SetData(".appPath", Environment.CurrentDirectory);
-
             //var assembly = File.ReadAllBytes(Path.Combine(toolPath, "UmbConsole.exe"));
             //umbracoDomain.Load(assembly);
 
@@ -73,6 +74,32 @@ namespace Our.Umbraco.Community.PowerShellModule
             {
                 throw;
             }
+        }
+
+        Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+        {
+            try
+            {
+                Assembly assembly = System.Reflection.Assembly.Load(args.Name);
+                if (assembly != null)
+                    return assembly;
+            }
+            catch
+            {
+                // ignore load error }
+
+                // *** Try to load by filename - split out the filename of the full assembly name
+                // *** and append the base path of the original assembly (ie. look in the same dir)
+                // *** NOTE: this doesn't account for special search paths but then that never
+                //           worked before either.
+                string[] Parts = args.Name.Split(',');
+                string File = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\" + Parts[0].Trim() +
+                              ".dll";
+
+                return System.Reflection.Assembly.LoadFrom(File);
+            }
+
+            return null;
         }
 
         private Assembly AssemblyResolve(object sender, ResolveEventArgs args)
