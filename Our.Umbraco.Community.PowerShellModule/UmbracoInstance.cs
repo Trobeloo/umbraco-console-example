@@ -29,38 +29,22 @@ namespace Our.Umbraco.Community.PowerShellModule
 
         public ConsoleApplicationBase Application => application;
 
-        public void Start()
-        {
-            AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
+        private string currentAssemblyPath;
 
-            CreateAndRunDomain();
+        public UmbracoInstance(string currentAssemblyPath)
+        {
+            this.currentAssemblyPath = currentAssemblyPath;
         }
 
-        private void CreateAndRunDomain()
+        public void Start()
         {
-            umbracoDomain = AppDomain.CreateDomain(
-                "Umbraco",
-                new Evidence(),
-                new AppDomainSetup
-                {
-                    //ApplicationBase = Environment.CurrentDirectory,
-                    PrivateBinPath = AppDomain.CurrentDomain.BaseDirectory,
-                    //PrivateBinPathProbe = "NonNullToOnlyUsePrivateBin",
-                    ConfigurationFile = Path.Combine(Environment.CurrentDirectory, "web.config")
-                }
-            );
-            umbracoDomain.SetData(".appPath", Environment.CurrentDirectory);
-            //var assembly = File.ReadAllBytes(Path.Combine(toolPath, "UmbConsole.exe"));
-            //umbracoDomain.Load(assembly);
-
-            //umbracoDomain.AssemblyLoad += (sender, eventArgs) => { return; };
-            umbracoDomain.AssemblyResolve += AssemblyResolve;
-
-            umbracoDomain.DoCallBack(RunUmbraco);
+            RunUmbraco();
         }
 
         private void RunUmbraco()
         {
+            AppDomain.CurrentDomain.AssemblyResolve += AssemblyResolve;
+
             Console.Title = "Umbraco Console";
 
             Assembly.Load("Examine");
