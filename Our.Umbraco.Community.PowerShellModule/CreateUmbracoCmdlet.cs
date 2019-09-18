@@ -18,37 +18,43 @@ namespace Our.Umbraco.Community.PowerShellModule
         {
             get
             {
-                if (instance == null)
-                {
-                    instance = new UmbracoInstance(AppDomain.CurrentDomain.BaseDirectory);
-                    CreateAndRunDomain();
-                }
-
                 return instance;
             }
         }
 
-        private static void CreateAndRunDomain()
+        public static void Initialize(string psPath)
+        {
+            if (instance == null)
+            {
+                instance = new UmbracoInstance(
+                    AppDomain.CurrentDomain.BaseDirectory,
+                    psPath
+                );
+                CreateAndRunDomain(psPath);
+            }
+        }
+
+        private static void CreateAndRunDomain(string psPath)
         {
             umbracoDomain = AppDomain.CreateDomain(
                 "Umbraco",
                 new Evidence(),
                 new AppDomainSetup
                 {
-                    //ApplicationBase = Environment.CurrentDirectory,
-                    PrivateBinPath = Path.Combine(Environment.CurrentDirectory),
+                    ApplicationBase = Environment.CurrentDirectory, // psPath,
+                    PrivateBinPath = Path.Combine(psPath),
                     //PrivateBinPathProbe = "NonNullToOnlyUsePrivateBin",
-                    ConfigurationFile = Path.Combine(Environment.CurrentDirectory, "web.config")
+                    ConfigurationFile = Path.Combine(psPath, "web.config")
                 }
             );
-            umbracoDomain.SetData(".appPath", Environment.CurrentDirectory);
+            umbracoDomain.SetData(".appPath", psPath);
             //var assembly = File.ReadAllBytes(Path.Combine(toolPath, "UmbConsole.exe"));
             //umbracoDomain.Load(assembly);
 
             //umbracoDomain.AssemblyLoad += (sender, eventArgs) => { return; };
 
-            var thisFile = File.ReadAllBytes(typeof(UmbracoInstanceContainer).Assembly.Location);
-            umbracoDomain.Load(thisFile);
+            //var thisFile = File.ReadAllBytes(typeof(UmbracoInstanceContainer).Assembly.Location);
+            //umbracoDomain.Load(thisFile);
 
             // WTF? Fusion log shows path of powershell. :/
             umbracoDomain.DoCallBack(instance.Start);
@@ -62,6 +68,7 @@ namespace Our.Umbraco.Community.PowerShellModule
     {
         protected override void ProcessRecord()
         {
+            UmbracoInstanceContainer.Initialize(SessionState.Path.CurrentLocation.Path);
             WriteObject(UmbracoInstanceContainer.Instance);
         }
     }

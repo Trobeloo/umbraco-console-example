@@ -10,12 +10,19 @@ namespace Our.Umbraco.Community.PowerShellModule
     /// </summary>
     public class ConsoleApplicationBase : UmbracoApplicationBase
     {
+        private readonly string psPath;
+
+        public ConsoleApplicationBase(string psPath)
+        {
+            this.psPath = psPath;
+        }
+
         public string BaseDirectory { get; private set; }
         public string DataDirectory { get; private set; }
 
         protected override IBootManager GetBootManager()
         {
-            var binDirectory = new DirectoryInfo(Path.Combine(Environment.CurrentDirectory, "bin"));
+            var binDirectory = new DirectoryInfo(Path.Combine(psPath, "bin"));
             BaseDirectory = ResolveBasePath(binDirectory);
             DataDirectory = Path.Combine(BaseDirectory, "app_data");
             var appDomainConfigPath = new DirectoryInfo(Path.Combine(BaseDirectory, "config"));

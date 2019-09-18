@@ -30,10 +30,12 @@ namespace Our.Umbraco.Community.PowerShellModule
         public ConsoleApplicationBase Application => application;
 
         private string currentAssemblyPath;
+        private string psPath;
 
-        public UmbracoInstance(string currentAssemblyPath)
+        public UmbracoInstance(string currentAssemblyPath, string psPath)
         {
             this.currentAssemblyPath = currentAssemblyPath;
+            this.psPath = psPath;
         }
 
         public void Start()
@@ -43,15 +45,15 @@ namespace Our.Umbraco.Community.PowerShellModule
 
         private void RunUmbraco()
         {
-            AppDomain.CurrentDomain.AssemblyResolve += AssemblyResolve;
-
-            Console.Title = "Umbraco Console";
-
-            Assembly.Load("Examine");
-            Assembly.Load("Lucene.Net");
-
             try
             {
+                AppDomain.CurrentDomain.AssemblyResolve += AssemblyResolve;
+
+                Console.Title = "Umbraco Console";
+
+                Assembly.Load("Examine");
+                Assembly.Load("Lucene.Net");
+
                 applicationContext = InitializeApplication();
             }
             catch
@@ -60,66 +62,23 @@ namespace Our.Umbraco.Community.PowerShellModule
             }
         }
 
-        Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
-        {
-            try
-            {
-                Assembly assembly = System.Reflection.Assembly.Load(args.Name);
-                if (assembly != null)
-                    return assembly;
-            }
-            catch
-            {
-                // ignore load error }
-
-                // *** Try to load by filename - split out the filename of the full assembly name
-                // *** and append the base path of the original assembly (ie. look in the same dir)
-                // *** NOTE: this doesn't account for special search paths but then that never
-                //           worked before either.
-                string[] Parts = args.Name.Split(',');
-                string File = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\" + Parts[0].Trim() +
-                              ".dll";
-
-                return System.Reflection.Assembly.LoadFrom(File);
-            }
-
-            return null;
-        }
-
         private Assembly AssemblyResolve(object sender, ResolveEventArgs args)
         {
             try
             {
                 var assemblyName = args.Name;
 
-                var probeFolder = Path.Combine(Environment.CurrentDirectory, "bin");
+                var probeFolders = new[] { Path.Combine(psPath, "bin"), currentAssemblyPath };
 
-                var currentDomain = AppDomain.CurrentDomain;
                 if (environmentAssemblies == null)
                 {
-                    var allLoadedAssemblies = currentDomain.GetAssemblies().Where(x => !x.IsDynamic);
-                    var loadedAssemblyFileNames = allLoadedAssemblies
-                        .Select(x => {
-                            try
-                            {
-                                return x.Location.Substring(x.Location.LastIndexOf(@"\") + 1);
-                            }
-                            catch
-                            {
-                                throw;
-                            }
-                        })
-                        .ToArray();
-
-                    var allEnvironmentAssemblyFiles = Directory.GetFiles(probeFolder)
+                    var allEnvironmentAssemblyFiles = probeFolders
+                        .SelectMany(Directory.GetFiles)
+                        .DistinctBy(x => x.Substring(x.LastIndexOf(@"\") + 1))
                         .Where(x => x.EndsWith(".dll") || x.EndsWith(".exe"))
                         .ToArray();
 
-                    var notLoadedEnvironmentAssemblies = allEnvironmentAssemblyFiles
-                        .Where(x => !loadedAssemblyFileNames.Any(x.EndsWith))
-                        .ToArray();
-
-                    environmentAssemblies = notLoadedEnvironmentAssemblies
+                    environmentAssemblies = allEnvironmentAssemblyFiles
                         .Select(Assembly.LoadFrom)
                         .ToDictionary(x => x.GetName().FullName, x => x);
                 }
@@ -151,7 +110,7 @@ namespace Our.Umbraco.Community.PowerShellModule
 
         private ApplicationContext InitializeApplication()
         {
-            application = new ConsoleApplicationBase();
+            application = new ConsoleApplicationBase(psPath);
             application.Start(application, new EventArgs());
             Console.WriteLine("Application Started");
 
