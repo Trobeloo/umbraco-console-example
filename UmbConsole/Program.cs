@@ -113,7 +113,7 @@ namespace UmbConsole
                 new Evidence(),
                 new AppDomainSetup
                 {
-                    ApplicationBase = AppDomain.CurrentDomain.BaseDirectory,
+                    ApplicationBase = Environment.CurrentDirectory,
                     PrivateBinPath = Path.Combine(Environment.CurrentDirectory, "bin"),
                     //PrivateBinPathProbe = "NonNullToOnlyUsePrivateBin",
                     ConfigurationFile = Path.Combine(Environment.CurrentDirectory, "web.config"),
@@ -128,7 +128,7 @@ namespace UmbConsole
             umbracoDomain.Load(assembly);
 
             //umbracoDomain.AssemblyLoad += (sender, eventArgs) => { return; };
-            umbracoDomain.AssemblyResolve += AssemblyResolve;
+            //umbracoDomain.AssemblyResolve += AssemblyResolve;
             var runner = new UmbracoRunner();
             umbracoDomain.DoCallBack(runner.RunUmbraco);
         }
