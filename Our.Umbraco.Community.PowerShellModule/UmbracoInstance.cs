@@ -110,6 +110,8 @@ namespace Our.Umbraco.Community.PowerShellModule
 
         private ApplicationContext InitializeApplication()
         {
+            Environment.CurrentDirectory = psPath;
+
             application = new ConsoleApplicationBase(psPath);
             application.Start(application, new EventArgs());
             Console.WriteLine("Application Started");

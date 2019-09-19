@@ -36,6 +36,7 @@ namespace Our.Umbraco.Community.PowerShellModule
 
         private static void CreateAndRunDomain(string psPath)
         {
+            var configurationFile = Path.Combine(psPath, "web.config");
             umbracoDomain = AppDomain.CreateDomain(
                 "Umbraco",
                 new Evidence(),
@@ -44,7 +45,7 @@ namespace Our.Umbraco.Community.PowerShellModule
                     ApplicationBase = Environment.CurrentDirectory, // psPath,
                     PrivateBinPath = Path.Combine(psPath),
                     //PrivateBinPathProbe = "NonNullToOnlyUsePrivateBin",
-                    ConfigurationFile = Path.Combine(psPath, "web.config")
+                    ConfigurationFile = configurationFile
                 }
             );
             umbracoDomain.SetData(".appPath", psPath);
