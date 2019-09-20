@@ -113,22 +113,21 @@ namespace UmbConsole
                 new Evidence(),
                 new AppDomainSetup
                 {
-                    ApplicationBase = Environment.CurrentDirectory,
-                    PrivateBinPath = Path.Combine(Environment.CurrentDirectory, "bin"),
+                    //ApplicationBase = Environment.CurrentDirectory,
+                    //PrivateBinPath = Path.Combine(Environment.CurrentDirectory, "bin"),
                     //PrivateBinPathProbe = "NonNullToOnlyUsePrivateBin",
                     ConfigurationFile = Path.Combine(Environment.CurrentDirectory, "web.config"),
                 }
             );
-            umbracoDomain.SetData("args", args);
             umbracoDomain.SetData(".appPath", Environment.CurrentDirectory);
 
-            var psAssembly = File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "System.Management.Automation.dll"));
-            umbracoDomain.Load(psAssembly);
-            var assembly = File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "UmbConsole.exe"));
-            umbracoDomain.Load(assembly);
+            //var psAssembly = File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "System.Management.Automation.dll"));
+            //umbracoDomain.Load(psAssembly);
+            //var assembly = File.ReadAllBytes(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "UmbConsole.exe"));
+            //umbracoDomain.Load(assembly);
 
             //umbracoDomain.AssemblyLoad += (sender, eventArgs) => { return; };
-            //umbracoDomain.AssemblyResolve += AssemblyResolve;
+            umbracoDomain.AssemblyResolve += AssemblyResolve;
             var runner = new UmbracoRunner();
             umbracoDomain.DoCallBack(runner.RunUmbraco);
         }
